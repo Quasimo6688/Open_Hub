@@ -30,14 +30,15 @@
     let playingGame = false; // 游戏是否开始的标志
     let youWin = false; // 玩家是否赢得游戏的标志
     let winText; // 显示胜利文本的元素
+    let colors = ['#FF5733', '#33FF57', '#3357FF', '#FF33FF', '#FFFF33']; // 砖块颜色数组
 
     // 初始化函数，设置游戏的初始状态
     function setup() {
-        createCanvas(600, 600); // 创建600x600的画布
+        createCanvas(600, 800); // 创建600x800的画布
         ball = new Ball(); // 初始化小球对象
         paddle = new Paddle(); // 初始化挡板对象
         winText = createP(''); // 创建显示胜利文本的元素
-        winText.position(10, 630); // 设置胜利文本的位置
+        winText.position(10, 830); // 设置胜利文本的位置
 
         // 计算砖块的起始位置，使其居中
         let totalBricksWidth = brickW * 10;
@@ -46,7 +47,7 @@
         // 初始化砖块数组
         for (let j = 0; j < 5; j++) {
             for (let i = 0; i < 10; i++) {
-                bricks.push(new Brick(createVector(startX + brickW * i, 25 + brickH * j)));
+                bricks.push(new Brick(createVector(startX + brickW * i, 25 + brickH * j), colors[j]));
             }
         }
     }
@@ -143,16 +144,17 @@
     }
 
     // 砖块对象的定义
-    function Brick(position) {
+    function Brick(position, color) {
         this.width = 60; // 砖块的宽度
         this.height = 30; // 砖块的高度
         this.position = position; // 砖块的位置
         this.isAlive = true; // 砖块是否存在的标志
+        this.color = color; // 砖块的颜色
 
         // 显示砖块的函数
         this.display = function() {
             if (this.isAlive) {
-                fill(0);
+                fill(this.color);
                 rect(this.position.x, this.position.y, this.width, this.height);
             }
         };
