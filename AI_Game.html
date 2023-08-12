@@ -11,12 +11,16 @@
                         let ball;
                         let paddle;
                         let bricks = [];
+                        let brickW = 40;
+                        let brickH = 20;
                         let playingGame = false;
                         let youWin = false;
                         let winText;
 
                         function setup() {
-                            createCanvas(400, 400);
+                            createCanvas(600, 800);
+                        let brickW = 40;
+                        let brickH = 20;
                         ball = new Ball();
                         paddle = new Paddle();
                         winText = createP('');
@@ -24,6 +28,7 @@
                         for (let j = 0; j < 5; j++) {
                 for (let i = 0; i < 10; i++) {
                             bricks.push(new Brick(createVector(brickW * i, 25 + brickH * j)));
+                            playingGame = true;
                 }
             }
         }
@@ -32,18 +37,25 @@
                             background(220);
                         ball.display();
                         paddle.display();
+                        for (let i = 0; i < bricks.length; i++) {
+                        bricks[i].display();
+                        }
+                        checkCollisions();
+
+                        if (playingGame) {
+                        ball.update();
+                        paddle.update();
+                        }
                         if (playingGame) ball.update();
-                        if (ball.collides(paddle) || ball.collidesTop(paddle)) {
-                            ball.direction.y *= -1;
-            }
+                        
                         checkCollisions();
                         displayWinText();
         }
                         function Ball() {
                             this.position = createVector(width / 2, height / 2);
                         this.direction = createVector(1, 1);
-                        this.speed = 3;
-                        this.radius = 10;
+                        this.speed = 2;
+                        this.radius = 8;
 
                         this.display = function() {
                             fill(0);
