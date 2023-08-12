@@ -1,173 +1,214 @@
-< !DOCTYPE html >
-    <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>Brick Breaker Game</title>
-                    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
-                </head>
-                <body>
-                    <script>
-                        let ball;
-                        let paddle;
-                        let bricks = [];
-                        let brickW = 40;
-                        let brickH = 20;
-                        let playingGame = false;
-                        let youWin = false;
-                        let winText;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brick Breaker Game</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <!-- 添加CSS样式，将游戏画布居中显示 -->
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+        canvas {
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+<script>
+    // 定义全局变量
+    let ball; // 小球对象
+    let paddle; // 挡板对象
+    let bricks = []; // 砖块数组
+    let brickW = 60; // 砖块宽度
+    let brickH = 30; // 砖块高度
+    let playingGame = false; // 游戏是否开始的标志
+    let youWin = false; // 玩家是否赢得游戏的标志
+    let winText; // 显示胜利文本的元素
 
-                        function setup() {
-                            createCanvas(600, 800);
-                        let brickW = 40;
-                        let brickH = 20;
-                        ball = new Ball();
-                        paddle = new Paddle();
-                        winText = createP('');
-                        winText.position(10, 380);
-                        for (let j = 0; j < 5; j++) {
-                for (let i = 0; i < 10; i++) {
-                            bricks.push(new Brick(createVector(brickW * i, 25 + brickH * j)));
-                            playingGame = true;
-                }
+    // 初始化函数，设置游戏的初始状态
+    function setup() {
+        createCanvas(600, 600); // 创建600x600的画布
+        ball = new Ball(); // 初始化小球对象
+        paddle = new Paddle(); // 初始化挡板对象
+        winText = createP(''); // 创建显示胜利文本的元素
+        winText.position(10, 630); // 设置胜利文本的位置
+
+        // 计算砖块的起始位置，使其居中
+        let totalBricksWidth = brickW * 10;
+        let startX = (width - totalBricksWidth) / 2;
+
+        // 初始化砖块数组
+        for (let j = 0; j < 5; j++) {
+            for (let i = 0; i < 10; i++) {
+                bricks.push(new Brick(createVector(startX + brickW * i, 25 + brickH * j)));
             }
         }
+    }
 
-                        function draw() {
-                            background(220);
-                        ball.display();
-                        paddle.display();
-                        for (let i = 0; i < bricks.length; i++) {
-                        bricks[i].display();
-                        }
-                        checkCollisions();
+    // 绘制函数，每一帧都会被调用
+    function draw() {
+        background(220); // 设置背景颜色
 
-                        if (playingGame) {
-                        ball.update();
-                        paddle.update();
-                        }
-                        if (playingGame) ball.update();
-                        
-                        checkCollisions();
-                        displayWinText();
-        }
-                        function Ball() {
-                            this.position = createVector(width / 2, height / 2);
-                        this.direction = createVector(1, 1);
-                        this.speed = 2;
-                        this.radius = 8;
-
-                        this.display = function() {
-                            fill(0);
-                        ellipse(this.position.x, this.position.y, this.radius * 2, this.radius * 2);
-            };
-
-                        this.update = function() {
-                            this.position.x += this.direction.x * this.speed;
-                        this.position.y += this.direction.y * this.speed;
-                if (this.position.x > width - this.radius || this.position.x < this.radius) {
-                            this.direction.x *= -1;
-                }
-                        if (this.position.y < this.radius) {
-                            this.direction.y *= -1;
-                }
-                if (this.position.y > height) {
-                            playingGame = false;
-                        this.position = createVector(width / 2, height / 2);
-                }
-            };
+        // 显示小球、挡板和砖块
+        ball.display();
+        paddle.display();
+        for (let i = 0; i < bricks.length; i++) {
+            bricks[i].display();
         }
 
-                        function Paddle() {
-                            this.width = 100;
-                        this.height = 10;
-                        this.isMovingLeft = false;
-                        this.isMovingRight = false;
-                        this.speed = 5;
-                        this.position = createVector((width - this.width) / 2, height - 35);
+        // 检查碰撞
+        checkCollisions();
 
-                        this.display = function() {
-                            fill(0);
-                        rect(this.position.x, this.position.y, this.width, this.height);
-            };
-
-                        this.update = function() {
-                if (this.isMovingRight) {
-                            this.move(1);
-                } else if (this.isMovingLeft) {
-                            this.move(-1);
-                }
-            };
-
-                        this.move = function(direction) {
-                            this.position.x += direction * this.speed;
-                        this.position.x = constrain(this.position.x, 0, width - this.width);
-            };
-        }
-                        function Brick(position) {
-                            this.width = 40;
-                        this.height = 20;
-                        this.position = position;
-                        this.color = color(random(255), random(255), random(255));
-
-                        this.display = function() {
-                            fill(this.color);
-                        rect(this.position.x, this.position.y, this.width, this.height);
-            };
-
-                        this.collides = function(ball) {
-                            let collides = !(ball.position.x + ball.radius < this.position.x ||
-                    ball.position.x - ball.radius > this.position.x + this.width ||
-                        ball.position.y + ball.radius < this.position.y ||
-                    ball.position.y - ball.radius > this.position.y + this.height);
-                        return collides;
-            };
+        // 如果游戏已经开始，更新小球和挡板的位置
+        if (playingGame) {
+            ball.update();
+            paddle.update();
         }
 
-                        function checkCollisions() {
-            for (let i = bricks.length - 1; i >= 0; i--) {
-                            let brick = bricks[i];
-                        if (brick.collides(ball)) {
-                            let collidingSide = ball.collidingSide(brick);
-                        if (collidingSide === 'top' || collidingSide === 'bottom') {
-                            ball.direction.y *= -1;
-                    } else if (collidingSide === 'left' || collidingSide === 'right') {
-                            ball.direction.x *= -1;
-                    }
-                        bricks.splice(i, 1);
-                        if (bricks.length === 0) {
-                            youWin = true;
-                        playingGame = false;
-                    }
-                }
+        // 显示胜利文本
+        displayWinText();
+    }
+
+    // 小球对象的定义
+    function Ball() {
+        this.position = createVector(width / 2, height / 2); // 小球的初始位置
+        this.direction = createVector(1, 1); // 小球的移动方向
+        this.speed = 2; // 小球的速度
+        this.radius = 8; // 小球的半径
+
+        // 显示小球的函数
+        this.display = function() {
+            fill(0);
+            ellipse(this.position.x, this.position.y, this.radius * 2, this.radius * 2);
+        };
+
+        // 更新小球位置的函数
+        this.update = function() {
+            this.position.x += this.direction.x * this.speed;
+            this.position.y += this.direction.y * this.speed;
+
+            // 如果小球碰到左右边界，反转水平方向
+            if (this.position.x > width - this.radius || this.position.x < this.radius) {
+                this.direction.x *= -1;
+            }
+
+            // 如果小球碰到上边界，反转垂直方向
+            if (this.position.y < this.radius) {
+                this.direction.y *= -1;
+            }
+
+            // 如果小球掉出屏幕底部，重置游戏
+            if (this.position.y > height) {
+                playingGame = false;
+                this.position = createVector(width / 2, height / 2);
+            }
+        };
+    }
+
+    // 挡板对象的定义
+    function Paddle() {
+        this.width = 100; // 挡板的宽度
+        this.height = 10; // 挡板的高度
+        this.isMovingLeft = false; // 挡板是否向左移动的标志
+        this.isMovingRight = false; // 挡板是否向右移动的标志
+        this.speed = 5; // 挡板的移动速度
+        this.position = createVector((width - this.width) / 2, height - 35); // 挡板的初始位置
+
+        // 显示挡板的函数
+        this.display = function() {
+            fill(0);
+            rect(this.position.x, this.position.y, this.width, this.height);
+        };
+
+        // 更新挡板位置的函数
+        this.update = function() {
+            if (this.isMovingRight) {
+                this.move(1);
+            } else if (this.isMovingLeft) {
+                this.move(-1);
+            }
+        };
+
+        // 控制挡板移动的函数
+        this.move = function(direction) {
+            this.position.x += direction * this.speed;
+            this.position.x = constrain(this.position.x, 0, width - this.width);
+        };
+    }
+
+    // 砖块对象的定义
+    function Brick(position) {
+        this.width = 60; // 砖块的宽度
+        this.height = 30; // 砖块的高度
+        this.position = position; // 砖块的位置
+        this.isAlive = true; // 砖块是否存在的标志
+
+        // 显示砖块的函数
+        this.display = function() {
+            if (this.isAlive) {
+                fill(0);
+                rect(this.position.x, this.position.y, this.width, this.height);
+            }
+        };
+    }
+
+    // 检查碰撞的函数
+    function checkCollisions() {
+        // 检查小球与挡板的碰撞
+        if (ball.collides(paddle)) {
+            ball.direction.y *= -1;
+            let diff = ball.position.x - (paddle.position.x + paddle.width / 2);
+            ball.direction.x = diff / (paddle.width / 2);
+            ball.direction.normalize();
+        }
+
+        // 检查小球与砖块的碰撞
+        for (let i = 0; i < bricks.length; i++) {
+            if (ball.collides(bricks[i]) && bricks[i].isAlive) {
+                bricks[i].isAlive = false;
+                ball.direction.y *= -1;
             }
         }
+    }
 
-                        function displayWinText() {
-            if (youWin) {
-                            winText.html('You Win!');
-            } else {
-                            winText.html('');
-            }
-        }
+    // 显示胜利文本的函数
+    function displayWinText() {
+        let aliveBricks = bricks.filter(function(brick) {
+            return brick.isAlive;
+        });
 
-                        function keyPressed() {
-            if (key === 'ArrowLeft') {
-                            paddle.isMovingLeft = true;
-            } else if (key === 'ArrowRight') {
-                            paddle.isMovingRight = true;
-            } else if (key === ' ') {
-                            playingGame = !playingGame;
-            }
+        if (aliveBricks.length === 0 && !youWin) {
+            youWin = true;
+            winText.html('You Win!');
         }
+    }
 
-                        function keyReleased() {
-            if (key === 'ArrowLeft') {
-                            paddle.isMovingLeft = false;
-            } else if (key === 'ArrowRight') {
-                            paddle.isMovingRight = false;
-            }
+    // 键盘按下事件的处理函数
+    function keyPressed() {
+        if (!playingGame) {
+            playingGame = true; // 游戏开始
         }
-                    </script>
-                </body>
-            </html>
+        if (key === 'ArrowLeft') {
+            paddle.isMovingLeft = true;
+        } else if (key === 'ArrowRight') {
+            paddle.isMovingRight = true;
+        }
+    }
+
+    // 键盘释放事件的处理函数
+    function keyReleased() {
+        if (key === 'ArrowLeft') {
+            paddle.isMovingLeft = false;
+        } else if (key === 'ArrowRight') {
+            paddle.isMovingRight = false;
+        }
+    }
+</script>
+</body>
+</html>
