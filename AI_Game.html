@@ -31,7 +31,6 @@
     let youWin = false; // 玩家是否赢得游戏的标志
     let winText; // 显示胜利文本的元素
     let colors = ['#FF5733', '#33FF57', '#3357FF', '#FF33FF', '#FFFF33']; // 砖块颜色数组
-
     // 初始化函数，设置游戏的初始状态
     function setup() {
         createCanvas(600, 800); // 创建600x800的画布
@@ -211,6 +210,35 @@
             paddle.isMovingRight = false;
         }
     }
+</script>
+    // 小球与其他对象的碰撞检测函数
+    Ball.prototype.collides = function(obj) {
+        let collidesOnX = this.position.x + this.radius > obj.position.x && this.position.x - this.radius < obj.position.x + obj.width;
+        let collidesOnY = this.position.y + this.radius > obj.position.y && this.position.y - this.radius < obj.position.y + obj.height;
+        return collidesOnX && collidesOnY;
+    };
+
+    // 挡板与小球的碰撞检测函数
+    Paddle.prototype.collides = function(ball) {
+        if (ball.position.y + ball.radius < this.position.y || ball.position.y - ball.radius > this.position.y + this.height) {
+            return false;
+        }
+        if (ball.position.x + ball.radius < this.position.x || ball.position.x - ball.radius > this.position.x + this.width) {
+            return false;
+        }
+        return true;
+    };
+
+    // 砖块与小球的碰撞检测函数
+    Brick.prototype.collides = function(ball) {
+        if (ball.position.y + ball.radius < this.position.y || ball.position.y - ball.radius > this.position.y + this.height) {
+            return false;
+        }
+        if (ball.position.x + ball.radius < this.position.x || ball.position.x - ball.radius > this.position.x + this.width) {
+            return false;
+        }
+        return true;
+    };
 </script>
 </body>
 </html>
