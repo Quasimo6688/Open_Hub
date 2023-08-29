@@ -41,8 +41,10 @@ try:
         settings = json.load(f)
         temperature = settings['temp']
         model= settings['gpt_model']
-        os.environ["OPENAI_API_KEY"] = settings['api_key']
-        openai.api_key = settings['api_key']
+        openai_api_key = "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"
+        os.environ["OPENAI_API_KEY"] = openai_api_key
+except Exception as e:
+        messagebox.showerror("错误", f"无法设置API密钥: {e}")
 except FileNotFoundError:
     print("配置文件 'settings.json' 未找到。")
 except json.JSONDecodeError:
