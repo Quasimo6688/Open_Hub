@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HammerGPT-BOT - By：暴躁哐哐v1.0</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #343541;
+            color: #D1D5DB;
+        }
+        .form-section, .chat-section {
+            padding: 20px;
+            background-color: #444654;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .chat-log {
+            height: 60vh;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        .message {
+            margin: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .message-bot {
+            background-color: #202123;
+            display: flex;
+            align-items: flex-start;
+        }
+        .message-bot img {
+            margin-right: 10px;
+            border-radius: 4px;
+            height: 30px;
+            width: 30px;
+        }
+        .message-you {
+            background-color: #343541;
+            display: flex;
+            align-items: flex-start;
+        }
+        .message-you img {
+            margin-right: 10px;
+            border-radius: 4px;
+            height: 30px;
+            width: 30px;
+        }
+        .form-control,
+        .btn {
+            background-color: #343541;
+            color: #FFFFFF;
+            border: 1px solid #000000;
+        }
+        .form-control:focus {
+            background-color: #343541;
+            color: #FFFFFF;
+            border: 1px solid #000000;
+            outline: none;
+            box-shadow: none;
+        }
+        .form-control::placeholder {
+            color: #999;
+            font-style: italic;
+        }
+        .btn {
+            background-color: #1296db;
+            border: 1px solid #FFFFFF;
+            color: #FFFFFF;
+            border-radius: 4px;
+            padding: 0;
+            flex-shrink: 0;
+            margin-left: 10px;
+            width: 32px;
+            height: 32px;
+        }
+        .btn img {
+            height: 30px;
+            width: 30px;
+        }
+        .form-group {
+            display: flex;
+        }
+        .form-control {
+            flex-grow: 1;
+        }
+        .save-btn {
+            background-color: #444654;
+            color: #FFFFFF;
+            padding: 5px 10px;
+            width: 140px;
+            height: 38px;
+        }
+        .settings {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .form-group div {
+            margin-right: 10px;
+            width: calc(100% / 3 - 10px);
+        }
+        .file-list-btn {
+            background-color: #1296db;
+            border: 1px solid #FFFFFF;
+            color: #FFFFFF;
+            border-radius: 2px;
+            padding: 0;
+            flex-shrink: 0;
+            margin-left: 10px;
+            width: 24px;
+            height: 24px;
+        }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body class="container py-5">
+    <h1 class="mb-5">暴躁哐哐Chat-With-File</h1>
+    
+    <!-- GPT model settings and source file upload -->
+    <form method="POST" enctype="multipart/form-data">
+        {{ prompt_form.hidden_tag() }}
+        <div class="form-section">
+            <div class="settings">
+                <h2>GPT模型设置</h2>
+            </div>
+            <!-- (Your fields here, omitted for brevity) -->
+            <div class="form-group">
+                <div>
+                    {{ prompt_form.api_key.label(class="form-label") }}
+                    {{ prompt_form.api_key(class="form-control") }}
+                </div>
+                <div>
+                    {{ prompt_form.gpt_model.label(class="form-label") }}
+                    {{ prompt_form.gpt_model(class="form-control") }}
+                </div>
+                <div>
+                    {{ prompt_form.temp.label(class="form-label") }}
+                    {{ prompt_form.temp(class="form-control") }}
+                </div>
+            </div>
+			<p> </p>
+            <div>
+                <button type="submit" class="save-btn" onclick="saveSettings()">保存设置</button>
+            </div>
+        </div>
+    </form>
+    <button id="view-library" class="save-btn">查看资料库</button>
+    <button id="add-docs" class="save-btn">添加学习资料</button>
+	<label id="learning-done" style="display: none;">资料学习完毕，重启AI后加载知识！</label>
+    <!-- 显示学习进度的进度条 -->
+    <div id="progress-bar" style="width: 100%; height: 20px; border: 1px solid black; display: none;">
+        <div id="progress" style="height: 100%; background-color: green; width: 0;"></div>
+    </div>
+    <!-- 这是一个隐藏的文件上传控件，用于当用户点击 "添加学习资料" 按钮时触发 -->
+    <input type="file" id="hidden-file-upload" style="display: none;" />
+	<p> </p>
+	<div id="file-list" style="display: none;">
+	    <button class="file-list-btn" id="close-file-list">x</button>
+	    <ul id="file-list-content">
+	        <!-- 文件列表将被插入到这里 -->
+	    </ul>
+	</div>
+    <!-- Chatbot interaction -->
+    <div class="chat-section">
+        <div class="chat-log" id="chat-log">
+            <!-- This div will contain the chat log -->
+        </div>
+        <div class="form-section">
+            <form id="question-form" method="POST">
+                {{ question_form.hidden_tag() }}
+                <div class="form-group">
+                    {{ question_form.question(id="question_text", class="form-control", placeholder="提出你的问题") }}
+                    <button type="submit" class="btn" id="submit-button">
+                        <img src="{{ url_for('static', filename='ask.png') }}" id="ask-img">
+                        <img src="{{ url_for('static', filename='loading.gif') }}" id="loading-img" style="display: none;">
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+	<script>
+		function printMessage(selector, message, index, interval) {
+		    if (index <= message.length) {
+		        // Use .html() instead of .append()
+		        $(selector).html(message.substring(0, index++));
+		        setTimeout(function () { printMessage(selector, message, index, interval); }, interval);
+		    }else {
+		        // execute callback if provided
+		        if(callback && typeof callback === "function") {
+		            callback();
+		        }
+		    }
+		}
+		
+		function decodeHtml(html) {
+		    var txt = document.createElement("textarea");
+		    txt.innerHTML = html;
+		    return txt.value;
+		}
+		
+	    // 添加查看资料库按钮的click事件
+	    $("#view-library").click(function() {
+	        $.ajax({
+	            url: "/view_library",
+	            type: "GET",
+	            success: function(response) {
+	                // 这里的response就是后端返回的file_list，你可以根据需要进行处理
+	                console.log(response);
+	            }
+	        });
+	    });
+
+	    // 添加添加学习资料按钮的click事件
+	    $("#add-docs").click(function() {
+	        // 触发隐藏的文件上传控件的click事件
+	        $("#hidden-file-upload").click();
+	    });
+
+	    // 当隐藏的文件上传控件的值发生变化时（即用户选择了文件后）
+	    $("#hidden-file-upload").change(function() {
+	        // 创建一个FormData对象
+	        var formData = new FormData();
+	        // 将选择的文件添加到FormData对象中
+	        formData.append('doc_file', this.files[0]);
+
+	        // 发送ajax请求
+	        $.ajax({
+	            url: "/add_docs",
+	            type: "POST",
+	            data: formData,
+	            processData: false,  // 告诉jQuery不要去处理发送的数据
+	            contentType: false,  // 告诉jQuery不要去设置Content-Type请求头
+	            success: function(response) {
+	                // 这里的response就是后端返回的结果，你可以根据需要进行处理
+	                console.log(response);
+	            }
+	        });
+	    });
+	    document.getElementById('add-docs').addEventListener('click', function() {
+	        var xhr = new XMLHttpRequest();
+	        xhr.open('POST', '/add_docs', true);
+	        xhr.send();
+        
+	        // 设置定时器，每秒请求一次后端的学习进度
+	        var timer = setInterval(function() {
+	            var xhr = new XMLHttpRequest();
+	            xhr.open('GET', '/progress', true);
+	            xhr.onreadystatechange = function() {
+	                if (xhr.readyState === 4 && xhr.status === 200) {
+				        // 显示进度条
+				        document.getElementById('progress-bar').style.display = 'block';
+						document.getElementById('learning-done').style.display = 'none';
+	                    var progress = JSON.parse(xhr.responseText).progress;
+	                    document.getElementById('progress').style.width = progress + '%';
+	                    if (progress >= 100) {
+	                        document.getElementById('learning-done').style.display = 'block';
+	                        document.getElementById('progress-bar').style.display = 'none';  // 隐藏进度条
+	                        clearInterval(timer);  // 学习完毕后关闭定时器
+	                    }
+	                }
+	            };
+	            xhr.send();
+	        }, 1000);
+	    });
+		$(function () {
+	        $("#view-library").click(function (event) {
+	            event.preventDefault();  // 阻止表单提交
+
+	            // 从后端获取文件列表
+	            $.ajax({
+	                url: "/view_library",
+	                type: "GET",
+	                success: function (file_list) {
+	                    // 清空文件列表，防止重复插入
+	                    $("#file-list-content").empty();
+
+	                    // 将文件列表插入到div中
+	                    for (let i = 0; i < file_list.length; i++) {
+	                        $("#file-list-content").append('<li>' + file_list[i] + '</li>');
+	                    }
+
+	                    // 显示文件列表div
+	                    $("#file-list").show();
+	                }
+	            });
+	        });
+
+	        // 绑定关闭按钮的点击事件
+	        $("#close-file-list").click(function () {
+	            // 隐藏文件列表div
+	            $("#file-list").hide();
+	        });
+	    });
+		function saveSettings() {
+		    $.ajax({
+		        url: "/",
+		        type: "POST",
+		        success: function(response) {
+		            if (response.status === 'success') {
+		                alert('设置保存成功,重启AI后生效！');
+		            }
+		        }
+		    });
+		}
+	    $(function () {
+	        $("#question-form").submit(function (event) {
+	            event.preventDefault();
+	            var questionText = $("#question_text").val();
+	            $("#submit-button").prop("disabled", true);
+	            $("#ask-img").hide();
+	            $("#loading-img").show();
+            
+	            // Append user question immediately
+	            $("#chat-log").append(
+	                '<div class="message message-you"><img src="{{ url_for('static', filename='you.jpg') }}" alt="You"><p style="white-space: pre-wrap;">' + questionText + '</p></div>'
+	            );
+
+				
+	            $("#question_text").val('');
+
+	            $.ajax({
+	                url: "/api/chat",
+	                type: "POST",
+	                data: {
+	                    question: questionText
+	                },
+	                success: function (response) {
+	                    // Append bot response container immediately, but don't fill it yet
+						var decodedAnswer = decodeHtml(response.answer);
+						var timestamp = new Date().getTime();
+						$("#chat-log").append(
+						    // '<div class="message message-bot"><img src="{{ url_for('static', filename='bot.png') }}" alt="Bot"><p id="bot-response-' + timestamp + '" style="white-space: pre-wrap;"></p></div>'
+							'<div class="message message-bot" id="message-bot-' + timestamp + '"><img src="{{ url_for('static', filename='bot.png') }}" alt="Bot"><p id="bot-response-' + timestamp + '" style="white-space: pre-wrap;"></p></div>'
+							
+						);
+						document.getElementById('bot-response-' + timestamp).scrollIntoView({behavior: 'smooth'});
+						printMessage("#bot-response-" + timestamp, decodedAnswer, 0, 10);
+	                    $("#submit-button").prop("disabled", false);
+	                    $("#ask-img").show();
+	                    $("#loading-img").hide();
+	                }
+	            });
+	        });
+	    });
+	</script>
+</body>
+</html>
